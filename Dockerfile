@@ -1,7 +1,7 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Based on
-# https://switch2osm.org/manually-building-a-tile-server-18-04-lts/
+# https://switch2osm.org/manually-building-a-tile-server-20-04-lts/
 
 # Set up environment
 ENV TZ=UTC
@@ -10,84 +10,94 @@ ENV UPDATES=disabled
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Install dependencies
-RUN apt-get update \
-  && apt-get install -y wget gnupg2 lsb-core apt-transport-https ca-certificates curl \
-  && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
-  && echo "deb [ trusted=yes ] https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
-  && wget --quiet -O - https://deb.nodesource.com/setup_10.x | bash - \
-  && apt-get update \
-  && apt-get install -y nodejs
+# RUN apt-get update \
+#   && apt-get install -y wget gnupg2 lsb-core apt-transport-https ca-certificates curl \
+#   && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+#   && echo "deb [ trusted=yes ] https://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
+#   && wget --quiet -O - https://deb.nodesource.com/setup_10.x | bash - \
+#   && apt-get update \
+#   && apt-get install -y nodejs
 
 RUN apt-get install -y --no-install-recommends \
-  apache2 \
-  apache2-dev \
-  autoconf \
-  build-essential \
-  bzip2 \
-  cmake \
-  cron \
-  fonts-noto-cjk \
-  fonts-noto-hinted \
-  fonts-noto-unhinted \
-  gcc \
-  gdal-bin \
-  git-core \
-  libagg-dev \
-  libboost-filesystem-dev \
-  libboost-system-dev \
-  libbz2-dev \
-  libcairo-dev \
-  libcairomm-1.0-dev \
-  libexpat1-dev \
-  libfreetype6-dev \
-  libgdal-dev \
-  libgeos++-dev \
-  libgeos-dev \
-  libgeotiff-epsg \
-  libicu-dev \
-  liblua5.3-dev \
-  libmapnik-dev \
-  libpq-dev \
-  libproj-dev \
-  libprotobuf-c0-dev \
-  libtiff5-dev \
-  libtool \
-  libxml2-dev \
-  lua5.3 \
-  make \
-  mapnik-utils \
-  node-gyp \
-  osmium-tool \
-  osmosis \
-  postgis \
-  postgresql-12 \
-  postgresql-contrib-12 \
-  postgresql-server-dev-12 \
-  protobuf-c-compiler \
-  python3-mapnik \
-  python3-lxml \
-  python3-psycopg2 \
-  python3-shapely \
-  sudo \
-  tar \
-  ttf-unifont \
-  unzip \
-  wget \
-  zlib1g-dev \
+   apache2 \
+   apache2-dev \
+   autoconf \
+   build-essential \
+   bzip2 \
+   cmake \
+   cron \
+   devscripts \
+   fonts-noto-cjk \
+   fonts-noto-hinted \
+   fonts-noto-unhinted \
+   gcc \
+   gdal-bin \
+   git-core \
+   libagg-dev \
+   libboost-all-dev \
+   libbz2-dev \
+   libcairo2-dev \
+   libcairomm-1.0-dev \
+   libexpat1-dev \
+   libfreetype6-dev \
+   libgdal-dev \
+   libgeos++-dev \
+   libgeos-dev \
+   libgeotiff-epsg \
+   libicu-dev \
+   liblua5.1-0-dev \
+   liblua5.2-dev \
+   libmapnik-dev \
+   libpng-dev \
+   libpq-dev \
+   libproj-dev \
+   libprotobuf-c0-dev \
+   libtiff5-dev \
+   libtool \
+   libxml2-dev \
+   libjson-perl \
+   libipc-sharelite-perl \
+   libgd-perl \
+   debhelper \
+   lua5.1 \
+   make \
+   mapnik-utils \
+   munin-node \
+   munin \
+   node-gyp \
+   osmium-tool \
+   osmosis \
+   osm2pgsql \
+   postgis \
+   postgresql \
+   postgresql-contrib \
+   postgresql-12-postgis-3 \
+   postgresql-12-postgis-3-scripts \
+   protobuf-c-compiler \
+   python3-mapnik \
+   python3-lxml \
+   python3-psycopg2 \
+   python3-shapely \
+   sudo \
+   tar \
+   ttf-unifont \
+   unzip \
+   wget \
+   zlib1g-dev \
 && apt-get clean autoclean \
 && apt-get autoremove --yes \
 && rm -rf /var/lib/{apt,dpkg,cache,log}/
 
 # Set up PostGIS
-RUN wget https://download.osgeo.org/postgis/source/postgis-3.0.0.tar.gz -O postgis.tar.gz \
- && mkdir -p postgis_src \
- && tar -xvzf postgis.tar.gz --strip 1 -C postgis_src \
- && rm postgis.tar.gz \
- && cd postgis_src \
- && ./configure \
- && make -j $(nproc) \
- && make -j $(nproc) install \
- && cd .. && rm -rf postgis_src
+# RUN wget https://download.osgeo.org/postgis/source/postgis-3.0.0.tar.gz -O postgis.tar.gz \
+#  && mkdir -p postgis_src \
+#  && tar -xvzf postgis.tar.gz --strip 1 -C postgis_src \
+#  && rm postgis.tar.gz \
+#  && cd postgis_src \
+#  && ./configure \
+#  && make -j $(nproc) \
+#  && make -j $(nproc) install \
+#  && cd .. && rm -rf postgis_src
 
 # Set up renderer user
 RUN adduser --disabled-password --gecos "" renderer
@@ -122,15 +132,22 @@ RUN mkdir -p /home/renderer/src \
  && cd ..
 
 # Configure stylesheet
-RUN mkdir -p /home/renderer/src \
- && cd /home/renderer/src \
- && git clone --single-branch --branch v4.23.0 https://github.com/gravitystorm/openstreetmap-carto.git --depth 1 \
- && cd openstreetmap-carto \
- && rm -rf .git \
- && npm install -g carto@0.18.2 \
- && carto project.mml > mapnik.xml \
- && scripts/get-shapefiles.py \
- && rm /home/renderer/src/openstreetmap-carto/data/*.zip
+# RUN mkdir -p /home/renderer/src \
+#  && cd /home/renderer/src \
+#  && git clone --single-branch --branch v4.23.0 https://github.com/gravitystorm/openstreetmap-carto.git --depth 1 \
+#  && cd openstreetmap-carto \
+#  && rm -rf .git \
+#  && npm install -g carto@0.18.2 \
+#  && carto project.mml > mapnik.xml \
+#  && scripts/get-shapefiles.py \
+#  && rm /home/renderer/src/openstreetmap-carto/data/*.zip
+
+# Configure opentopomap stylesheet
+# From https://github.com/der-stefan/OpenTopoMap/tree/master/mapnik
+ RUN mkdir -p /home/renderer/src \
+   && cd /home/renderer/src \
+   && git clone --single-branch --branch master https://github.com/der-stefan/OpenTopoMap.git \
+
 
 # Configure renderd
 RUN sed -i 's/renderaccount/renderer/g' /usr/local/etc/renderd.conf \
